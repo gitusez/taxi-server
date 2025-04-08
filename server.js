@@ -9,7 +9,7 @@ const app = express();
 
 app.use(morgan("dev"));
 app.use(cors({
-  origin: "*",
+  origin: "https://taxi1.netlify.app",
   methods: ["POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
