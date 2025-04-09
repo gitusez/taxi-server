@@ -36,7 +36,7 @@ app.use(express.json({
   }
 }));
 
-// 5. Обработка ошибок парсинга JSON
+// 5. Обработка ошибок JSON
 app.use((err, req, res, next) => {
   if (err.message === "Invalid JSON") {
     return res.status(400).json({ success: false, error: "Невалидный JSON" });
@@ -54,11 +54,11 @@ function generateSignature(jsonBody, apiKey) {
   return crypto.createHash("sha1").update(jsonBody + apiKey).digest("hex");
 }
 
-// Получение авто по одному owner_id
+// Получение авто
 async function fetchCars(url, apiKey, filterOwnerId) {
   const timestamp = Math.floor(Date.now() / 1000);
   const requestData = {
-    timestamp: timestamp,
+    timestamp,
     filters: { filter_owner_id: filterOwnerId },
     items: 100,
     offset: 0
@@ -73,10 +73,11 @@ async function fetchCars(url, apiKey, filterOwnerId) {
       "Content-Type": "application/json"
     }
   });
+
   return response.data;
 }
 
-// Главный API маршрут
+// API маршрут
 app.post("/api/cars/combined", async (req, res) => {
   try {
     const accounts = [
@@ -124,8 +125,8 @@ app.post("/api/cars/combined", async (req, res) => {
   }
 });
 
-// Порт
+// ⛔ Слушаем только localhost!
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Сервер запущен на порту ${PORT}`);
+app.listen(PORT, "127.0.0.1", () => {
+  console.log(`🚀 Сервер запущен на порту ${PORT} (localhost only)`);
 });
