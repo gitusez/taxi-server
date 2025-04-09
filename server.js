@@ -6,17 +6,25 @@ const crypto = require("crypto");
 
 const app = express();
 
-// Логирование
+// 1. Логирование
 app.use(morgan("dev"));
 
-// CORS — только с Netlify фронта
+// 2. CORS — до всего остального
 app.use(cors({
   origin: "https://taxi1.netlify.app",
   methods: ["POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// Обработка JSON с валидацией
+// 3. Блок фильтрации не-JSON запросов
+app.use((req, res, next) => {
+  if (req.method === "POST" && req.path === "/api/cars/combined" && !req.is("application/json")) {
+    return res.status(415).json({ success: false, error: "Content-Type must be application/json" });
+  }
+  next();
+});
+
+// 4. Парсинг JSON с валидацией
 app.use(express.json({
   strict: true,
   verify: (req, res, buf) => {
@@ -28,7 +36,7 @@ app.use(express.json({
   }
 }));
 
-// Обработка ошибок парсинга JSON
+// 5. Обработка ошибок JSON
 app.use((err, req, res, next) => {
   if (err.message === "Invalid JSON") {
     return res.status(400).json({ success: false, error: "Невалидный JSON" });
