@@ -16,9 +16,9 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// 3. Блок фильтрации не-JSON запросов
+// 3. Блок фильтрации всех не-JSON POST-запросов
 app.use((req, res, next) => {
-  if (req.method === "POST" && req.path === "/api/cars/combined" && !req.is("application/json")) {
+  if (req.method === "POST" && !req.is("application/json")) {
     return res.status(415).json({ success: false, error: "Content-Type must be application/json" });
   }
   next();
