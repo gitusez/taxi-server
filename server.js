@@ -9,14 +9,14 @@ const app = express();
 // 1. Логирование
 app.use(morgan("dev"));
 
-// 2. CORS — до всего остального
+// 2. CORS
 app.use(cors({
   origin: "https://taxi1.netlify.app",
   methods: ["POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// 3. Блок фильтрации всех не-JSON POST-запросов
+// 3. Глобальная защита от POST без JSON
 app.use((req, res, next) => {
   if (req.method === "POST" && !req.is("application/json")) {
     return res.status(415).json({ success: false, error: "Content-Type must be application/json" });
@@ -24,7 +24,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// 4. Парсинг JSON с валидацией
+// 4. Безопасный JSON-парсер
 app.use(express.json({
   strict: true,
   verify: (req, res, buf) => {
@@ -36,7 +36,7 @@ app.use(express.json({
   }
 }));
 
-// 5. Обработка ошибок JSON
+// 5. Обработка ошибок парсинга JSON
 app.use((err, req, res, next) => {
   if (err.message === "Invalid JSON") {
     return res.status(400).json({ success: false, error: "Невалидный JSON" });
@@ -44,17 +44,17 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// Ответ на GET /
+// 6. Ответ на GET /
 app.get("/", (req, res) => {
   res.send("🚖 Taxi API server is running");
 });
 
-// Функция для генерации SHA1-подписи
+// SHA1-подпись
 function generateSignature(jsonBody, apiKey) {
   return crypto.createHash("sha1").update(jsonBody + apiKey).digest("hex");
 }
 
-// Получение списка авто
+// Получение авто по одному owner_id
 async function fetchCars(url, apiKey, filterOwnerId) {
   const timestamp = Math.floor(Date.now() / 1000);
   const requestData = {
@@ -93,7 +93,10 @@ app.post("/api/cars/combined", async (req, res) => {
       {
         url: "https://premierplus.taxicrm.ru/api/public/v1/cars/list",
         apiKey: "f6bb44ed1116ca11dd5eeae3772f41c6ef6f90e7",
-        ownerIds: ["08bd7d68-9c8f-5d7c-b73c-5fca59168f7b", "164b685f-ca1b-5ac6-9f59-3ee0fa42e98a"]
+        ownerIds: [
+          "08bd7d68-9c8f-5d7c-b73c-5fca59168f7b",
+          "164b685f-ca1b-5ac6-9f59-3ee0fa42e98a"
+        ]
       }
     ];
 
