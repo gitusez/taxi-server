@@ -3,28 +3,29 @@ const cors = require("cors");
 const axios = require("axios");
 const morgan = require("morgan");
 const crypto = require("crypto");
+const path = require("path");
 
 const app = express();
 
-// 1. Логирование
+// 🔧 Логирование
 app.use(morgan("dev"));
 
-// 2. CORS
+// 🌐 Разрешаем CORS с фронта
 app.use(cors({
-  origin: "https://taxi1.netlify.app",
+  origin: "*", // Можно указать точный домен, если хочешь: "https://autofinanceapp.ru"
   methods: ["POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// 3. Глобальная защита от POST без JSON
+// 📦 Проверка content-type для /api/cars/combined
 app.use((req, res, next) => {
-  if (req.method === "POST" && !req.is("application/json")) {
+  if (req.method === "POST" && req.path === "/api/cars/combined" && !req.is("application/json")) {
     return res.status(415).json({ success: false, error: "Content-Type must be application/json" });
   }
   next();
 });
 
-// 4. Безопасный JSON-парсер
+// 🧠 Парсинг JSON с валидацией
 app.use(express.json({
   strict: true,
   verify: (req, res, buf) => {
@@ -36,7 +37,7 @@ app.use(express.json({
   }
 }));
 
-// 5. Обработка ошибок JSON
+// ❌ Обработка ошибок JSON
 app.use((err, req, res, next) => {
   if (err.message === "Invalid JSON") {
     return res.status(400).json({ success: false, error: "Невалидный JSON" });
@@ -44,17 +45,12 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// 6. Ответ на GET /
-app.get("/", (req, res) => {
-  res.send("🚖 Taxi API server is running");
-});
-
-// SHA1-подпись
+// 🔐 SHA1 подпись
 function generateSignature(jsonBody, apiKey) {
   return crypto.createHash("sha1").update(jsonBody + apiKey).digest("hex");
 }
 
-// Получение авто
+// 🚗 Получение авто
 async function fetchCars(url, apiKey, filterOwnerId) {
   const timestamp = Math.floor(Date.now() / 1000);
   const requestData = {
@@ -77,7 +73,7 @@ async function fetchCars(url, apiKey, filterOwnerId) {
   return response.data;
 }
 
-// API маршрут
+// 🔄 Маршрут получения списка авто
 app.post("/api/cars/combined", async (req, res) => {
   try {
     const accounts = [
@@ -94,10 +90,7 @@ app.post("/api/cars/combined", async (req, res) => {
       {
         url: "https://premierplus.taxicrm.ru/api/public/v1/cars/list",
         apiKey: "f6bb44ed1116ca11dd5eeae3772f41c6ef6f90e7",
-        ownerIds: [
-          "08bd7d68-9c8f-5d7c-b73c-5fca59168f7b",
-          "164b685f-ca1b-5ac6-9f59-3ee0fa42e98a"
-        ]
+        ownerIds: ["08bd7d68-9c8f-5d7c-b73c-5fca59168f7b", "164b685f-ca1b-5ac6-9f59-3ee0fa42e98a"]
       }
     ];
 
@@ -125,8 +118,15 @@ app.post("/api/cars/combined", async (req, res) => {
   }
 });
 
-// ⛔ Слушаем только localhost!
+// 📁 Раздача фронта
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// 🚀 Запуск сервера
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, "127.0.0.1", () => {
-  console.log(`🚀 Сервер запущен на порту ${PORT} (localhost only)`);
+app.listen(PORT, () => {
+  console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
