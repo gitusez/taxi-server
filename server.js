@@ -7,21 +7,14 @@ const crypto = require("crypto");
 const path = require("path");
 
 const app = express();
-
-// 🔧 Логирование
 app.use(morgan("dev"));
-
-// 📦 GZIP-сжатие
 app.use(compression());
-
-// 🌐 Разрешаем CORS
 app.use(cors({
   origin: "*",
   methods: ["POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// 📦 Проверка content-type для /api/cars/combined
 app.use((req, res, next) => {
   if (req.method === "POST" && req.path === "/api/cars/combined") {
     const contentType = req.headers["content-type"] || "";
@@ -32,7 +25,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// 🧠 Парсинг JSON с валидацией
 app.use(express.json({
   strict: true,
   verify: (req, res, buf) => {
@@ -44,7 +36,6 @@ app.use(express.json({
   }
 }));
 
-// ❌ Обработка ошибок JSON
 app.use((err, req, res, next) => {
   if (err.message === "Invalid JSON") {
     return res.status(400).json({ success: false, error: "Невалидный JSON" });
@@ -52,12 +43,10 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// 🔐 SHA1 подпись
 function generateSignature(jsonBody, apiKey) {
   return crypto.createHash("sha1").update(jsonBody + apiKey).digest("hex");
 }
 
-// 🚗 Получение авто
 async function fetchCars(url, apiKey, filterOwnerId) {
   const timestamp = Math.floor(Date.now() / 1000);
   const requestData = {
@@ -80,10 +69,9 @@ async function fetchCars(url, apiKey, filterOwnerId) {
   return response.data;
 }
 
-// 🔄 Маршрут получения списка авто
 app.post("/api/cars/combined", async (req, res) => {
   try {
-    const { items = 30, offset = 0, allowedOwners = [] } = req.body;
+    const { items = 30, offset = 0 } = req.body;
 
     const accounts = [
       {
@@ -105,21 +93,17 @@ app.post("/api/cars/combined", async (req, res) => {
 
     const promises = accounts.map(async account => {
       let cars = [];
-
-      const filteredOwnerIds = account.ownerIds.filter(id =>
-        allowedOwners.length === 0 || allowedOwners.includes(id)
-      );
-
-      for (const ownerId of filteredOwnerIds) {
+      for (const ownerId of account.ownerIds) {
         const data = await fetchCars(account.url, account.apiKey, ownerId);
         if (data.success && data.cars_list) {
           const list = Array.isArray(data.cars_list)
             ? data.cars_list
             : Object.values(data.cars_list);
-          cars = cars.concat(list);
+
+          const filtered = list.filter(car => car.status === 20);
+          cars = cars.concat(filtered);
         }
       }
-
       return cars;
     });
 
@@ -127,7 +111,6 @@ app.post("/api/cars/combined", async (req, res) => {
     const allCars = results.flat();
 
     const paginatedCars = allCars.slice(offset, offset + items);
-
     res.json({ success: true, cars_list: paginatedCars });
   } catch (error) {
     console.error("Ошибка объединения:", error.message);
@@ -135,14 +118,12 @@ app.post("/api/cars/combined", async (req, res) => {
   }
 });
 
-// 📁 Раздача фронта
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// 🚀 Запуск сервера
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
