@@ -2,13 +2,18 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const morgan = require("morgan");
+const compression = require("compression");
 const crypto = require("crypto");
 const path = require("path");
+
 
 const app = express();
 
 // 🔧 Логирование
 app.use(morgan("dev"));
+
+// 📦 GZIP-сжатие
+app.use(compression());
 
 // 🌐 Разрешаем CORS
 app.use(cors({
