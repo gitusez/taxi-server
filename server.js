@@ -10,9 +10,9 @@ const app = express();
 // 🔧 Логирование
 app.use(morgan("dev"));
 
-// 🌐 Разрешаем CORS с фронта
+// 🌐 Разрешаем CORS
 app.use(cors({
-  origin: "*", // Можно указать точный домен, если хочешь: "https://autofinanceapp.ru"
+  origin: "*",
   methods: ["POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
@@ -76,6 +76,8 @@ async function fetchCars(url, apiKey, filterOwnerId) {
 // 🔄 Маршрут получения списка авто
 app.post("/api/cars/combined", async (req, res) => {
   try {
+    const { items = 30, offset = 0 } = req.body;
+
     const accounts = [
       {
         url: "https://premiergroup.taxicrm.ru/api/public/v1/cars/list",
@@ -109,9 +111,12 @@ app.post("/api/cars/combined", async (req, res) => {
     });
 
     const results = await Promise.all(promises);
-    const combinedCars = results.flat();
+    const allCars = results.flat();
 
-    res.json({ success: true, cars_list: combinedCars });
+    // 🔢 Постраничная выборка
+    const paginatedCars = allCars.slice(offset, offset + items);
+
+    res.json({ success: true, cars_list: paginatedCars });
   } catch (error) {
     console.error("Ошибка объединения:", error.message);
     res.status(500).json({ success: false, error: error.message });
