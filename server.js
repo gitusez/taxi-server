@@ -76,7 +76,7 @@ async function fetchCars(url, apiKey, filterOwnerId) {
 // 🔄 Маршрут получения списка авто
 app.post("/api/cars/combined", async (req, res) => {
   try {
-    const { items = 30, offset = 0 } = req.body;
+    const { items = 30, offset = 0, allowedOwners = [] } = req.body; // ✅ добавлена строка!
 
     const accounts = [
       {
@@ -98,11 +98,11 @@ app.post("/api/cars/combined", async (req, res) => {
 
     const promises = accounts.map(async account => {
       let cars = [];
-    
+
       const filteredOwnerIds = account.ownerIds.filter(id =>
         allowedOwners.length === 0 || allowedOwners.includes(id)
       );
-    
+
       for (const ownerId of filteredOwnerIds) {
         const data = await fetchCars(account.url, account.apiKey, ownerId);
         if (data.success && data.cars_list) {
@@ -112,14 +112,13 @@ app.post("/api/cars/combined", async (req, res) => {
           cars = cars.concat(list);
         }
       }
+
       return cars;
     });
-    
 
     const results = await Promise.all(promises);
     const allCars = results.flat();
 
-    // 🔢 Постраничная выборка
     const paginatedCars = allCars.slice(offset, offset + items);
 
     res.json({ success: true, cars_list: paginatedCars });
