@@ -24,8 +24,11 @@ app.use(cors({
 
 // 📦 Проверка content-type для /api/cars/combined
 app.use((req, res, next) => {
-  if (req.method === "POST" && req.path === "/api/cars/combined" && !req.is("application/json")) {
-    return res.status(415).json({ success: false, error: "Content-Type must be application/json" });
+  if (req.method === "POST" && req.path === "/api/cars/combined") {
+    const contentType = req.headers["content-type"] || "";
+    if (!contentType.includes("application/json")) {
+      return res.status(415).json({ success: false, error: "Content-Type must be application/json" });
+    }
   }
   next();
 });
