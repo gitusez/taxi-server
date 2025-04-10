@@ -7,6 +7,7 @@ const crypto = require("crypto");
 const path = require("path");
 
 const app = express();
+
 app.use(morgan("dev"));
 app.use(compression());
 app.use(cors({
@@ -15,6 +16,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
+// Проверка Content-Type
 app.use((req, res, next) => {
   if (req.method === "POST" && req.path === "/api/cars/combined") {
     const contentType = req.headers["content-type"] || "";
@@ -30,7 +32,7 @@ app.use(express.json({
   verify: (req, res, buf) => {
     try {
       JSON.parse(buf);
-    } catch (e) {
+    } catch {
       throw new Error("Invalid JSON");
     }
   }
@@ -93,6 +95,7 @@ app.post("/api/cars/combined", async (req, res) => {
 
     const promises = accounts.map(async account => {
       let cars = [];
+
       for (const ownerId of account.ownerIds) {
         const data = await fetchCars(account.url, account.apiKey, ownerId);
         if (data.success && data.cars_list) {
@@ -104,6 +107,7 @@ app.post("/api/cars/combined", async (req, res) => {
           cars = cars.concat(filtered);
         }
       }
+
       return cars;
     });
 
@@ -111,6 +115,7 @@ app.post("/api/cars/combined", async (req, res) => {
     const allCars = results.flat();
 
     const paginatedCars = allCars.slice(offset, offset + items);
+
     res.json({ success: true, cars_list: paginatedCars });
   } catch (error) {
     console.error("Ошибка объединения:", error.message);
@@ -119,7 +124,6 @@ app.post("/api/cars/combined", async (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, "public")));
-
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
