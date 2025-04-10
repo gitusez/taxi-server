@@ -6,7 +6,6 @@ const compression = require("compression");
 const crypto = require("crypto");
 const path = require("path");
 
-
 const app = express();
 
 // 🔧 Логирование
@@ -84,7 +83,7 @@ async function fetchCars(url, apiKey, filterOwnerId) {
 // 🔄 Маршрут получения списка авто
 app.post("/api/cars/combined", async (req, res) => {
   try {
-    const { items = 30, offset = 0, allowedOwners = [] } = req.body; // ✅ добавлена строка!
+    const { items = 30, offset = 0, allowedOwners = [] } = req.body;
 
     const accounts = [
       {
