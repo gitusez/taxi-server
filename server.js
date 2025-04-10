@@ -98,7 +98,12 @@ app.post("/api/cars/combined", async (req, res) => {
 
     const promises = accounts.map(async account => {
       let cars = [];
-      for (const ownerId of account.ownerIds) {
+    
+      const filteredOwnerIds = account.ownerIds.filter(id =>
+        allowedOwners.length === 0 || allowedOwners.includes(id)
+      );
+    
+      for (const ownerId of filteredOwnerIds) {
         const data = await fetchCars(account.url, account.apiKey, ownerId);
         if (data.success && data.cars_list) {
           const list = Array.isArray(data.cars_list)
@@ -109,6 +114,7 @@ app.post("/api/cars/combined", async (req, res) => {
       }
       return cars;
     });
+    
 
     const results = await Promise.all(promises);
     const allCars = results.flat();
