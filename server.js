@@ -154,9 +154,11 @@ allCars.forEach((car, i) => {
   }
 });
 
-app.use(express.static(path.join(__dirname, "public")));
+const frontendPath = "/var/www/autofinanceapp.ru";
+
+app.use(express.static(frontendPath));
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 const PORT = process.env.PORT || 3000;
