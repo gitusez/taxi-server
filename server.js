@@ -8,6 +8,7 @@ const path = require("path");
 
 const app = express();
 
+// 🔧 Middleware
 app.use(morgan("dev"));
 app.use(compression());
 app.use(cors({
@@ -27,6 +28,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// Обработка JSON с проверкой
 app.use(express.json({
   strict: true,
   verify: (req, res, buf) => {
@@ -38,6 +40,7 @@ app.use(express.json({
   }
 }));
 
+// Обработка ошибок JSON
 app.use((err, req, res, next) => {
   if (err.message === "Invalid JSON") {
     return res.status(400).json({ success: false, error: "Невалидный JSON" });
@@ -45,10 +48,12 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
+// Хелпер: SHA1-сигнатура
 function generateSignature(jsonBody, apiKey) {
   return crypto.createHash("sha1").update(jsonBody + apiKey).digest("hex");
 }
 
+// Запрос к CRM
 async function fetchCars(url, apiKey, filterOwnerId) {
   const timestamp = Math.floor(Date.now() / 1000);
   const requestData = {
@@ -71,6 +76,7 @@ async function fetchCars(url, apiKey, filterOwnerId) {
   return response.data;
 }
 
+// 🚘 Основной эндпоинт
 app.post("/api/cars/combined", async (req, res) => {
   try {
     const { items = 30, offset = 0 } = req.body;
@@ -93,6 +99,62 @@ app.post("/api/cars/combined", async (req, res) => {
       }
     ];
 
+    const promises = accounts.map(async account => {
+      let cars = [];
+
+      for (const ownerId of account.ownerIds) {
+        const data = await fetchCars(account.url, account.apiKey, ownerId);
+        if (data.success && data.cars_list) {
+          const list = Array.isArray(data.cars_list)
+            ? data.cars_list
+            : Object.values(data.cars_list);
+
+          const filtered = list.filter(car => car.status === 20);
+
+          console.log(`✅ Найдено ${filtered.length} авто у владельца ${ownerId}:`);
+          filtered.forEach(car => {
+            console.log(`→ ${car.brand || ''} ${car.model || ''} | ${car.number || '—'} | Статус: ${car.status}`);
+          });
+
+          cars = cars.concat(filtered);
+        }
+      }
+
+      return cars;
+    });
+
+    const results = await Promise.all(promises);
+    const allCars = results.flat();
+
+    console.log(`\n🚗 Всего отфильтрованных авто: ${allCars.length}`);
+    allCars.forEach((car, i) => {
+      console.log(`#${i + 1}: ${car.brand || ''} ${car.model || ''} (${car.number || '—'})`);
+    });
+
+    const paginatedCars = allCars.slice(offset, offset + items);
+
+    res.json({ success: true, cars_list: paginatedCars });
+  } catch (error) {
+    console.error("❌ Ошибка объединения:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 🔗 Обслуживание фронта
+const frontendPath = "/var/www/autofinanceapp.ru";
+app.use(express.static(frontendPath));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
+
+// ▶️ Запуск сервера
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Сервер запущен на порту ${PORT}`);
+});
+
+
     // const promises = accounts.map(async account => {
     //   let cars = [];
 
@@ -110,58 +172,3 @@ app.post("/api/cars/combined", async (req, res) => {
 
     //   return cars;
     // });
-
-    const promises = accounts.map(async account => {
-      let cars = [];
-    
-      for (const ownerId of account.ownerIds) {
-        const data = await fetchCars(account.url, account.apiKey, ownerId);
-        if (data.success && data.cars_list) {
-          const list = Array.isArray(data.cars_list)
-            ? data.cars_list
-            : Object.values(data.cars_list);
-    
-          const filtered = list.filter(car => car.status === 20);
-    
-          console.log(`✅ Найдено ${filtered.length} авто у владельца ${ownerId}:`);
-          filtered.forEach(car => {
-            console.log(`→ ${car.brand || ''} ${car.model || ''} | ${car.number || '—'} | Статус: ${car.status}`);
-          });
-    
-          cars = cars.concat(filtered);
-        }
-      }
-    
-      return cars;
-    });
-    
-
-    const results = await Promise.all(promises);
-    const allCars = results.flat();
-
-    console.log(`\n🚗 Всего отфильтрованных авто: ${allCars.length}`);
-allCars.forEach((car, i) => {
-  console.log(`#${i + 1}: ${car.brand || ''} ${car.model || ''} (${car.number || '—'})`);
-});
-
-
-    const paginatedCars = allCars.slice(offset, offset + items);
-
-    res.json({ success: true, cars_list: paginatedCars });
-  } catch (error) {
-    console.error("Ошибка объединения:", error.message);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-const frontendPath = "/var/www/autofinanceapp.ru";
-
-app.use(express.static(frontendPath));
-app.get("/", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Сервер запущен на порту ${PORT}`);
-});
