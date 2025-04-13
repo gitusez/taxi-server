@@ -141,7 +141,7 @@ app.post("/api/cars/combined", async (req, res) => {
 });
 
 // 🔗 Обслуживание фронта
-const frontendPath = "/var/www/autofinanceapp.ru";
+const frontendPath = "/var/www/autofinanceapp.ru/public";
 app.use(express.static(frontendPath));
 
 app.get("/", (req, res) => {
