@@ -99,29 +99,55 @@ app.post("/api/cars/combined", async (req, res) => {
       }
     ];
 
-    const promises = accounts.map(async account => {
-      let cars = [];
+    // const promises = accounts.map(async account => {
+    //   let cars = [];
 
-      for (const ownerId of account.ownerIds) {
-        const data = await fetchCars(account.url, account.apiKey, ownerId);
-        if (data.success && data.cars_list) {
-          const list = Array.isArray(data.cars_list)
-            ? data.cars_list
-            : Object.values(data.cars_list);
+    //   for (const ownerId of account.ownerIds) {
+    //     const data = await fetchCars(account.url, account.apiKey, ownerId);
+    //     if (data.success && data.cars_list) {
+    //       const list = Array.isArray(data.cars_list)
+    //         ? data.cars_list
+    //         : Object.values(data.cars_list);
 
-          const filtered = list.filter(car => car.status === 20);
+    //       const filtered = list.filter(car => car.status === 20);
 
-          console.log(`✅ Найдено ${filtered.length} авто у владельца ${ownerId}:`);
-          filtered.forEach(car => {
-            console.log(`→ ${car.brand || ''} ${car.model || ''} | ${car.number || '—'} | Статус: ${car.status}`);
-          });
+    //       console.log(`✅ Найдено ${filtered.length} авто у владельца ${ownerId}:`);
+    //       filtered.forEach(car => {
+    //         console.log(`→ ${car.brand || ''} ${car.model || ''} | ${car.number || '—'} | Статус: ${car.status}`);
+    //       });
 
-          cars = cars.concat(filtered);
+    //       cars = cars.concat(filtered);
+    //     }
+    //   }
+
+    //   return cars;
+    // });
+
+    const promises = accounts.flatMap(account =>
+      account.ownerIds.map(async ownerId => {
+        try {
+          const data = await fetchCars(account.url, account.apiKey, ownerId);
+          if (data.success && data.cars_list) {
+            const list = Array.isArray(data.cars_list)
+              ? data.cars_list
+              : Object.values(data.cars_list);
+    
+            const filtered = list.filter(car => car.status === 20);
+    
+            console.log(`✅ Найдено ${filtered.length} авто у владельца ${ownerId}:`);
+            filtered.forEach(car => {
+              console.log(`→ ${car.brand || ''} ${car.model || ''} | ${car.number || '—'} | Статус: ${car.status}`);
+            });
+    
+            return filtered;
+          }
+        } catch (err) {
+          console.error(`❌ Ошибка загрузки для ${ownerId}:`, err.message);
         }
-      }
-
-      return cars;
-    });
+        return [];
+      })
+    );
+    
 
     const results = await Promise.all(promises);
     const allCars = results.flat();
