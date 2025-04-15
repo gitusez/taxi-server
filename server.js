@@ -187,6 +187,8 @@ const morgan = require("morgan");
 const compression = require("compression");
 const crypto = require("crypto");
 const path = require("path");
+const nodemailer = require("nodemailer");
+
 
 const app = express();
 
@@ -265,6 +267,38 @@ async function fetchCars(url, apiKey, filterOwnerId) {
   return response.data;
 }
 
+// Отправка на почту заявки
+app.post("/api/feedback", async (req, res) => {
+  const { name, phone, request } = req.body;
+
+  if (!name || !phone || !request) {
+    return res.status(400).json({ success: false, error: "Заполните все поля" });
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "artemikareshov@gmail.com",
+        pass: "wpsi qart qokn zrpz"
+      }
+    });
+
+    await transporter.sendMail({
+      from: `"Заявка с сайта" <artemikareshov@gmail.com>`,
+      to: "artemikareshov@gmail.com",
+      subject: "Новая заявка на авто",
+      text: `Имя: ${name}\nТелефон: ${phone}\nЗапрос: ${request}`,
+      html: `<b>Имя:</b> ${name}<br><b>Телефон:</b> ${phone}<br><b>Запрос:</b> ${request}`
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Ошибка отправки письма:", err.message);
+    res.status(500).json({ success: false, error: "Ошибка отправки письма" });
+  }
+});
+
 // 🚘 Основной эндпоинт
 app.post("/api/cars/combined", async (req, res) => {
   try {
@@ -293,6 +327,7 @@ app.post("/api/cars/combined", async (req, res) => {
         ownerIds: ["08bd7d68-9c8f-5d7c-b73c-5fca59168f7b", "164b685f-ca1b-5ac6-9f59-3ee0fa42e98a"]
       }
     ];
+    
 
     const promises = accounts.map(async account => {
       let cars = [];
