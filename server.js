@@ -137,10 +137,32 @@ app.post("/api/cars/combined", async (req, res) => {
       console.log(`#${i + 1}: ${car.brand || ''} ${car.model || ''} (${car.number || '—'})`);
     });
 
-    const paginatedCars = uniqueCars.slice(offset, offset + items);
+    // const paginatedCars = uniqueCars.slice(offset, offset + items);
 
-    res.json({ success: true, cars_list: paginatedCars });
-  } catch (error) {
+    // res.json({ success: true, cars_list: paginatedCars });
+
+    // Сокращаем данные (оставляем только нужные поля)
+const reducedCars = uniqueCars.map(car => ({
+  id: car.id,
+  brand: car.brand,
+  model: car.model,
+  year: car.year,
+  avatar: car.avatar,
+  color: car.color,
+  number: car.number,
+  fuel_type: car.fuel_type
+}));
+
+// Пагинация уже по сжатым данным
+const paginatedCars = reducedCars.slice(offset, offset + items);
+
+res.json({ success: true, cars_list: paginatedCars });
+
+
+    
+  } 
+  
+  catch (error) {
     console.error("❌ Ошибка объединения:", error.message);
     res.status(500).json({ success: false, error: error.message });
   }
