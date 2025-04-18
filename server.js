@@ -179,7 +179,11 @@
 // app.listen(PORT, () => {
 //   console.log(`🚀 Сервер запущен на порту ${PORT}`);
 // });
+//
 
+
+
+// server.js
 const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
@@ -329,6 +333,47 @@ app.post("/api/cars/combined", async (req, res) => {
         ownerIds: ["08bd7d68-9c8f-5d7c-b73c-5fca59168f7b", "164b685f-ca1b-5ac6-9f59-3ee0fa42e98a"]
       }
     ];
+
+// 📩 Отправка заявки на Яндекс.Почту
+app.post("/api/send-request", async (req, res) => {
+  const { name, phone, request } = req.body;
+
+  if (!name || !phone) {
+    return res.status(400).json({ success: false, message: "Имя и телефон обязательны" });
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: "smtp.yandex.ru",
+    port: 465,
+    secure: true,
+    auth: {
+      user: "shirenyan.robert@ya.ru",
+      pass: "qtqhvxkuuzxxhcma"
+    }
+  });
+
+  const mailOptions = {
+    from: "shirenyan.robert@ya.ru",
+    to: "shirenyan.robert@ya.ru", // или другую почту
+    subject: "Заявка с сайта",
+    html: `
+      <h2>Новая заявка</h2>
+      <p><strong>Имя:</strong> ${name}</p>
+      <p><strong>Телефон:</strong> ${phone}</p>
+      <p><strong>Желаемая машина:</strong> ${request || 'не указано'}</p>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Ошибка отправки:", error);
+    res.status(500).json({ success: false, message: "Ошибка отправки письма" });
+  }
+});
+
+    
     
 
     // const promises = accounts.map(async account => {
