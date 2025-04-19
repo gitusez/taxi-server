@@ -18,7 +18,6 @@ bot.onText(/\/start/, (msg) => {
       inline_keyboard: [
         [{ text: "📲 WhatsApp", url: "https://wa.me/79991234567" }],
         [{ text: "📞 Позвонить", callback_data: "call" }],
-        [{ text: "🆘 SOS", callback_data: "sos" }]
       ]
     }
   });
@@ -29,11 +28,7 @@ bot.on("callback_query", (query) => {
   const data = query.data;
 
   if (data === "call") {
-    bot.sendMessage(chatId, "📞 Позвоните по номеру: +7 (999) 123-45-67");
-  }
-
-  if (data === "sos") {
-    bot.sendMessage(chatId, "🆘 SOS: оператор уведомлён и скоро свяжется!");
+    bot.sendMessage(chatId, "📞 Позвоните по номеру: +7 800 555 34 32");
   }
 
   bot.answerCallbackQuery(query.id); // Обязательно подтверждаем клик
