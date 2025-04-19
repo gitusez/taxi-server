@@ -16,3 +16,6 @@ logs
 
 # OS generated files
 Thumbs.db
+
+# bot token
+bot/.env
