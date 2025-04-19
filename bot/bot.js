@@ -1,16 +1,23 @@
-require("dotenv").config({ path: __dirname + "/.env" }); // подключаем локальный .env
+require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+const token = process.env.BOT_TOKEN;
+
+if (!token) {
+  console.error("❌ BOT_TOKEN не найден в .env");
+  process.exit(1);
+}
+
+const bot = new TelegramBot(token, { polling: true });
 
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
+
   bot.sendMessage(chatId, "Добро пожаловать! Выберите действие:", {
     reply_markup: {
       inline_keyboard: [
         [{ text: "📲 WhatsApp", url: "https://wa.me/79991234567" }],
-        [{ text: "📞 Позвонить", url: "tel:+79991234567" }],
+        [{ text: "📞 Позвонить", callback_data: "call" }],
         [{ text: "🆘 SOS", callback_data: "sos" }]
       ]
     }
@@ -19,7 +26,17 @@ bot.onText(/\/start/, (msg) => {
 
 bot.on("callback_query", (query) => {
   const chatId = query.message.chat.id;
-  if (query.data === "sos") {
+  const data = query.data;
+
+  if (data === "call") {
+    bot.sendMessage(chatId, "📞 Позвоните по номеру: +7 (999) 123-45-67");
+  }
+
+  if (data === "sos") {
     bot.sendMessage(chatId, "🆘 SOS: оператор уведомлён и скоро свяжется!");
   }
+
+  bot.answerCallbackQuery(query.id); // Обязательно подтверждаем клик
 });
+
+console.log("🤖 Бот запущен и слушает команды...");
