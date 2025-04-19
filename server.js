@@ -129,14 +129,14 @@ app.post("/api/send-request", async (req, res) => {
     port: 465,
     secure: true,
     auth: {
-      user: "shirenyan.robert@ya.ru",
-      pass: "qtqhvxkuuzxxhcma"
+      user: "Premier-Group-order@yandex.ru",
+      pass: "9ad-8Ce-9Fv-ECc"
     }
   });
 
   const mailOptions = {
-    from: "shirenyan.robert@ya.ru",
-    to: "shirenyan.robert@ya.ru", // или другую почту
+    from: "Premier-Group-order@yandex.ru",
+    to: "Premier-Group-order@yandex.ru", // или другую почту
     subject: "Заявка с сайта",
     html: `
       <h2>Новая заявка</h2>
