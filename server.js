@@ -230,6 +230,9 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
+// Подключение Telegram-бота
+require("./bot/bot.js");
+
 // ▶️ Запуск сервера
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
