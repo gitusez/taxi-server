@@ -16,7 +16,7 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(chatId, "Добро пожаловать! Выберите действие:", {
     reply_markup: {
       inline_keyboard: [
-        [{ text: "📲 WhatsApp", url: "https://wa.me/79991234567" }],
+        [{ text: "💬 WhatsApp", url: "https://wa.me/79991234567" }],
         [{ text: "📞 Позвонить", callback_data: "call" }],
       ]
     }
