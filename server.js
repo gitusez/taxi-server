@@ -207,7 +207,10 @@ app.post("/api/send-request", async (req, res) => {
       avatar: car.avatar,
       color: car.color,
       number: car.number,
-      fuel_type: car.fuel_type
+      odometer: car.odometer,             // ✅ пробег
+      fuel_type: car.fuel_type,
+      transmission: car.transmission,    // ✅ тип КПП
+      equipment: car.equipment,          // ✅ комплектация
     }));
 
     // Обновляем кэш
