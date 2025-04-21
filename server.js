@@ -207,7 +207,7 @@ app.post("/api/send-request", async (req, res) => {
       avatar: car.avatar,
       color: car.color,
       number: car.number,
-      odometer: car.odometer,             // ✅ пробег
+      odometer_manual: car.odometer_manual,             // ✅ пробег
       fuel_type: car.fuel_type,
       transmission: car.transmission,    // ✅ тип КПП
       equipment: car.equipment,          // ✅ комплектация
