@@ -92,11 +92,17 @@ app.post("/api/cars/combined", async (req, res) => {
   try {
     const { items = 30, offset = 0 } = req.body;
 
-    const now = Date.now();
-    if (carCache.data && now - carCache.timestamp < carCache.duration) {
-      const paginatedCars = carCache.data.slice(offset, offset + items);
-      return res.json({ success: true, cars_list: paginatedCars });
-    }
+    // const now = Date.now();
+    // if (carCache.data && now - carCache.timestamp < carCache.duration) {
+    //   const paginatedCars = carCache.data.slice(offset, offset + items);
+    //   return res.json({ success: true, cars_list: paginatedCars });
+    // }
+    // if (carCache.data && now - carCache.timestamp < carCache.duration) {
+    //   const paginatedCars = carCache.data.slice(offset, offset + items);
+    //   console.log(`📦 Отдаём ${paginatedCars.length} авто из кэша (offset: ${offset}, items: ${items})`);
+    //   return res.json({ success: true, cars_list: paginatedCars });
+    // }
+    
 
     const accounts = [
       {
