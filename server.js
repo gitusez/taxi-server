@@ -92,16 +92,16 @@ app.post("/api/cars/combined", async (req, res) => {
   try {
     const { items = 30, offset = 0 } = req.body;
 
-    // const now = Date.now();
+    const now = Date.now();
     // if (carCache.data && now - carCache.timestamp < carCache.duration) {
     //   const paginatedCars = carCache.data.slice(offset, offset + items);
     //   return res.json({ success: true, cars_list: paginatedCars });
     // }
-    // if (carCache.data && now - carCache.timestamp < carCache.duration) {
-    //   const paginatedCars = carCache.data.slice(offset, offset + items);
-    //   console.log(`📦 Отдаём ${paginatedCars.length} авто из кэша (offset: ${offset}, items: ${items})`);
-    //   return res.json({ success: true, cars_list: paginatedCars });
-    // }
+    if (carCache.data && now - carCache.timestamp < carCache.duration) {
+      const paginatedCars = carCache.data.slice(offset, offset + items);
+      console.log(`📦 Отдаём ${paginatedCars.length} авто из кэша (offset: ${offset}, items: ${items})`);
+      return res.json({ success: true, cars_list: paginatedCars });
+    }
     
 
     const accounts = [
@@ -205,19 +205,40 @@ app.post("/api/send-request", async (req, res) => {
     });
 
     // Сжимаем данные
-    const reducedCars = uniqueCars.map(car => ({
-      id: car.id,
-      brand: car.brand,
-      model: car.model,
-      year: car.year,
-      avatar: car.avatar,
-      color: car.color,
-      number: car.number,
-      odometer: car.odometer_manual? `${car.odometer_manual.toLocaleString("ru-RU")} км`: (car.odometer ? `${car.odometer.toLocaleString("ru-RU")} км` : "—"), // ✅ пробег
-      fuel_type: car.fuel_type,
-      transmission: car.transmission,    // ✅ тип КПП
-      equipment: car.equipment,          // ✅ комплектация
-    }));
+    // const reducedCars = uniqueCars.map(car => ({
+    //   id: car.id,
+    //   brand: car.brand,
+    //   model: car.model,
+    //   year: car.year,
+    //   avatar: car.avatar,
+    //   color: car.color,
+    //   number: car.number,
+    //   odometer: car.odometer_manual? `${car.odometer_manual.toLocaleString("ru-RU")} км`: (car.odometer ? `${car.odometer.toLocaleString("ru-RU")} км` : "—"), // ✅ пробег
+    //   fuel_type: car.fuel_type,
+    //   transmission: car.transmission,    // ✅ тип КПП
+    //   equipment: car.equipment,          // ✅ комплектация
+    // }));
+
+    const reducedCars = uniqueCars.map(car => {
+      const odoRaw = car.odometer_manual ?? car.odometer; // 👈 выбираем первое валидное
+      const odo = typeof odoRaw === 'number' ? odoRaw : 0;
+    
+      return {
+        id: car.id,
+        brand: car.brand,
+        model: car.model,
+        year: car.year,
+        avatar: car.avatar,
+        color: car.color,
+        number: car.number,
+        odometer: odo, // числовое значение для сортировки
+        odometer_display: odo ? `${odo.toLocaleString("ru-RU")} км` : "—", // строка для вывода
+        fuel_type: car.fuel_type,
+        transmission: car.transmission,
+        equipment: car.equipment
+      };
+    });
+    
 
     // Обновляем кэш
     carCache.data = reducedCars;
