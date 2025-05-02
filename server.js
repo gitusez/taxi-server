@@ -86,38 +86,6 @@ async function fetchCars(url, apiKey, filterOwnerId) {
   return response.data;
 }
 
-// 🚘 Основной эндпоинт
-
-app.post("/api/cars/combined", async (req, res) => {
-  try {
-    const { items = 30, offset = 0 } = req.body;
-
-    const now = Date.now();
-    if (carCache.data && now - carCache.timestamp < carCache.duration) {
-      const paginatedCars = carCache.data.slice(offset, offset + items);
-      console.log(`📦 Отдаём ${paginatedCars.length} авто из кэша (offset: ${offset}, items: ${items})`);
-      return res.json({ success: true, cars_list: paginatedCars });
-    }
-    
-
-    const accounts = [
-      {
-        url: "https://premiergroup.taxicrm.ru/api/public/v1/cars/list",
-        apiKey: "ff841cef5fb5602e51ae7432230078906c9577af",
-        ownerIds: ["cc9af95f-1f44-557a-89ab-d2c6e36d7e9d"]
-      },
-      {
-        url: "https://premierm.taxicrm.ru/api/public/v1/cars/list",
-        apiKey: "c7611ef537404fad4ac7043a2b3d148caf71328d",
-        ownerIds: ["5ca94f01-64a1-5e14-9d22-4a69d0851e77"]
-      },
-      {
-        url: "https://premierplus.taxicrm.ru/api/public/v1/cars/list",
-        apiKey: "f6bb44ed1116ca11dd5eeae3772f41c6ef6f90e7",
-        ownerIds: ["08bd7d68-9c8f-5d7c-b73c-5fca59168f7b", "164b685f-ca1b-5ac6-9f59-3ee0fa42e98a"]
-      }
-    ];
-
 // 📩 Отправка заявки на Яндекс.Почту
 app.post("/api/send-request", async (req, res) => {
   const { name, phone, request } = req.body;
@@ -156,6 +124,50 @@ app.post("/api/send-request", async (req, res) => {
     res.status(500).json({ success: false, message: "Ошибка отправки письма" });
   }
 });
+
+// 🚘 Основной эндпоинт
+
+app.post("/api/cars/combined", async (req, res) => {
+  try {
+    const { items = 30, offset = 0 } = req.body;
+
+    const now = Date.now();
+    // if (carCache.data && now - carCache.timestamp < carCache.duration) {
+    //   const paginatedCars = carCache.data.slice(offset, offset + items);
+    //   console.log(`📦 Отдаём ${paginatedCars.length} авто из кэша (offset: ${offset}, items: ${items})`);
+    //   return res.json({ success: true, cars_list: paginatedCars }); // back 1
+    // }
+    if (carCache.data && now - carCache.timestamp < carCache.duration) {
+      const paginatedCars = carCache.data.slice(offset, offset + items);
+      console.log(`📦 Отдаём ${paginatedCars.length} авто из кэша (offset: ${offset}, items: ${items})`);
+      return res.json({
+        success: true,
+        cars_list: paginatedCars,
+        total: carCache.data.length
+      });
+    }
+    
+    
+
+    const accounts = [
+      {
+        url: "https://premiergroup.taxicrm.ru/api/public/v1/cars/list",
+        apiKey: "ff841cef5fb5602e51ae7432230078906c9577af",
+        ownerIds: ["cc9af95f-1f44-557a-89ab-d2c6e36d7e9d"]
+      },
+      {
+        url: "https://premierm.taxicrm.ru/api/public/v1/cars/list",
+        apiKey: "c7611ef537404fad4ac7043a2b3d148caf71328d",
+        ownerIds: ["5ca94f01-64a1-5e14-9d22-4a69d0851e77"]
+      },
+      {
+        url: "https://premierplus.taxicrm.ru/api/public/v1/cars/list",
+        apiKey: "f6bb44ed1116ca11dd5eeae3772f41c6ef6f90e7",
+        ownerIds: ["08bd7d68-9c8f-5d7c-b73c-5fca59168f7b", "164b685f-ca1b-5ac6-9f59-3ee0fa42e98a"]
+      }
+    ];
+
+
 
     const promises = accounts.flatMap(account =>
       account.ownerIds.map(async ownerId => {
@@ -225,8 +237,15 @@ app.post("/api/send-request", async (req, res) => {
     carCache.data = reducedCars;
     carCache.timestamp = Date.now();
 
+    // const paginatedCars = reducedCars.slice(offset, offset + items);
+    // res.json({ success: true, cars_list: paginatedCars });
     const paginatedCars = reducedCars.slice(offset, offset + items);
-    res.json({ success: true, cars_list: paginatedCars });
+res.json({
+  success: true,
+  cars_list: paginatedCars,
+  total: reducedCars.length
+});
+
   } catch (error) {
     console.error("❌ Ошибка объединения:", error.message);
     res.status(500).json({ success: false, error: error.message });
