@@ -255,6 +255,29 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
+
+const fs = require('fs');
+const PHOTO_DIR = "/var/www/autofinanceapp.ru/photos";
+
+// 📷 Эндпоинт: отдать список фото по номеру
+app.get('/api/photos/:number', (req, res) => {
+  const number = req.params.number.replace(/\s/g, '').toUpperCase();
+  const folderPath = path.join(PHOTO_DIR, number);
+
+  fs.readdir(folderPath, (err, files) => {
+    if (err || !files) {
+      return res.status(404).json({ success: false, error: 'Фотографии не найдены' });
+    }
+
+    const photoFiles = files
+      .filter(f => f.startsWith(number + '_') && /\.(jpe?g|png)$/i.test(f))
+      .map(f => `/photos/${number}/${f}`);
+
+    res.json({ success: true, photos: photoFiles });
+  });
+});
+
+
 // Подключение Telegram-бота
 require("./bot/bot.js");
 
