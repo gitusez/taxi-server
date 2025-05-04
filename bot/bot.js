@@ -10,6 +10,15 @@ if (!token) {
 
 const bot = new TelegramBot(token, { polling: true });
 
+bot.on("polling_error", (err) => {
+  if (err?.message?.includes("ERR_UNESCAPED_CHARACTERS")) {
+    console.warn("⚠️ polling_error: путь запроса содержит неэкранированные символы");
+  } else {
+    console.error("❌ polling_error:", err.message || err);
+  }
+});
+
+
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
 
