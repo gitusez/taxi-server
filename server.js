@@ -306,7 +306,7 @@ app.get("/", (req, res) => {
 });
 
 
-const fs = require('fs');
+// const fs = require('fs');
 const PHOTO_DIR = "/var/www/autofinanceapp.ru/photos";
 
 // 📷 Эндпоинт: отдать список фото по номеру
