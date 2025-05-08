@@ -29,7 +29,10 @@ loadManualPrices();
 fs.watchFile(manualPricesPath, { interval: 1000 }, () => {
   console.log("[↻] Обнаружено изменение manual-prices.json, перезагрузка...");
   loadManualPrices();
+  carCache.data = null; // 🔥 Сброс кэша
+  console.log("[ℹ] Кэш сброшен после обновления цен");
 });
+
 
 const app = express();
 
