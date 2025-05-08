@@ -9,7 +9,7 @@ const path = require("path");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 
-const manualPricesPath = path.join(__dirname, 'manual-prices.json');
+const manualPricesPath = '/var/www/taxi-data/manual-prices.json';
 let manualPrices = {};
 
 function loadManualPrices() {
