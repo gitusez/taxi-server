@@ -7,7 +7,29 @@ const compression = require("compression");
 const crypto = require("crypto");
 const path = require("path");
 const nodemailer = require("nodemailer");
+const fs = require("fs");
 
+const manualPricesPath = path.join(__dirname, 'manual-prices.json');
+let manualPrices = {};
+
+function loadManualPrices() {
+  try {
+    const data = fs.readFileSync(manualPricesPath, 'utf-8');
+    manualPrices = JSON.parse(data);
+    console.log("[✔] Загружены ручные цены");
+  } catch (err) {
+    console.warn("[!] Не удалось загрузить ручные цены:", err.message);
+    manualPrices = {};
+  }
+}
+
+loadManualPrices();
+
+// Автообновление при изменении файла
+fs.watchFile(manualPricesPath, { interval: 1000 }, () => {
+  console.log("[↻] Обнаружено изменение manual-prices.json, перезагрузка...");
+  loadManualPrices();
+});
 
 const app = express();
 
@@ -207,9 +229,33 @@ app.post("/api/cars/combined", async (req, res) => {
       console.log(`#${i + 1}: ${car.brand || ''} ${car.model || ''} (${car.number || '—'})`);
     });
 
+    // const reducedCars = uniqueCars.map(car => {
+    //   const odoRaw = car.odometer_manual ?? car.odometer; // 👈 выбираем первое валидное
+    //   const odo = typeof odoRaw === 'number' ? odoRaw : 0;
+    
+    //   return {
+    //     id: car.id,
+    //     brand: car.brand,
+    //     model: car.model,
+    //     year: car.year,
+    //     avatar: car.avatar,
+    //     color: car.color,
+    //     number: car.number,
+    //     odometer: odo, // числовое значение для сортировки
+    //     odometer_display: odo ? `${odo.toLocaleString("ru-RU")} км` : "—", // строка для вывода
+    //     fuel_type: car.fuel_type,
+    //     transmission: car.transmission,
+    //     equipment: car.equipment
+    //   };
+    // });
+
     const reducedCars = uniqueCars.map(car => {
-      const odoRaw = car.odometer_manual ?? car.odometer; // 👈 выбираем первое валидное
+      const odoRaw = car.odometer_manual ?? car.odometer;
       const odo = typeof odoRaw === 'number' ? odoRaw : 0;
+    
+      // Ручные цены
+      const number = (car.number || "").replace(/\s/g, "").toUpperCase();
+      const manual = manualPrices[number] || {};
     
       return {
         id: car.id,
@@ -219,13 +265,17 @@ app.post("/api/cars/combined", async (req, res) => {
         avatar: car.avatar,
         color: car.color,
         number: car.number,
-        odometer: odo, // числовое значение для сортировки
-        odometer_display: odo ? `${odo.toLocaleString("ru-RU")} км` : "—", // строка для вывода
+        odometer: odo,
+        odometer_display: odo ? `${odo.toLocaleString("ru-RU")} км` : "—",
         fuel_type: car.fuel_type,
         transmission: car.transmission,
-        equipment: car.equipment
+        equipment: car.equipment,
+    
+        // 👉 Добавляем
+        manual_price: manual // { rent, buyout, prokat } или {}
       };
     });
+    
     
 
     // Обновляем кэш
@@ -280,6 +330,31 @@ app.get('/api/photos/:number', (req, res) => {
 
 // Подключение Telegram-бота
 require("./bot/bot.js");
+
+
+// 📄 Получение всех ручных цен
+app.get('/api/manual-prices', (req, res) => {
+  res.json(manualPrices);
+});
+
+// 💾 Сохранение новых цен
+app.post('/api/manual-prices', (req, res) => {
+  try {
+    const updated = req.body;
+    if (typeof updated !== 'object') throw new Error("Некорректный формат данных");
+
+    // Перезаписываем файл
+    fs.writeFileSync(manualPricesPath, JSON.stringify(updated, null, 2), 'utf-8');
+    manualPrices = updated;
+
+    console.log("[✔] Обновлены ручные цены через интерфейс администратора");
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[✖] Ошибка при сохранении ручных цен:", err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 
 // ▶️ Запуск сервера
 const PORT = process.env.PORT || 3000;
