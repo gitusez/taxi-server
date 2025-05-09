@@ -127,6 +127,14 @@ async function fetchCars(url, apiKey, filterOwnerId) {
   return response.data;
 }
 
+
+// Добавляем маршрут для “logout” — сброса Basic Auth
+app.get('/logout', (req, res) => {
+  // Возвращаем 401 и заголовок, чтобы браузер сбросил учётки
+  res.set('WWW-Authenticate', 'Basic realm="Admin Area"');
+  res.status(401).send('Logged out');
+});
+
 // 📩 Отправка заявки на Яндекс.Почту
 app.post("/api/send-request", async (req, res) => {
   const { name, phone, request } = req.body;
