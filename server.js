@@ -1,5 +1,6 @@
 // server.js
-require('dotenv').config();                 //  ← в самом верху
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const basicAuth = require('express-basic-auth');
 const express = require("express");
 const cors = require("cors");
@@ -7,7 +8,6 @@ const axios = require("axios");
 const morgan = require("morgan");
 const compression = require("compression");
 const crypto = require("crypto");
-const path = require("path");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 
@@ -49,23 +49,40 @@ let carCache = {
 app.use(morgan("dev"));
 app.use(compression());
 app.use(cors({
-  origin: "*",
+  origin: "https://autofinanceapp.ru/",
   methods: ["GET","POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 // Защита Админ Панели
 
+// const ADMIN_USER = process.env.ADMIN_USER;
+// const ADMIN_PASS = process.env.ADMIN_PASS;
+// app.use(
+//   ['/admin-prices.html', '/api/manual-prices'],
+//   basicAuth({
+//     users: { [ADMIN_USER]: ADMIN_PASS },
+//     challenge: true,
+//     realm: 'Admin Area'
+//   })
+// );
+
 const ADMIN_USER = process.env.ADMIN_USER;
 const ADMIN_PASS = process.env.ADMIN_PASS;
-app.use(
-  ['/admin-prices.html', '/api/manual-prices'],
-  basicAuth({
-    users: { [ADMIN_USER]: ADMIN_PASS },
-    challenge: true,
-    realm: 'Admin Area'
-  })
-);
+
+if (!ADMIN_USER || !ADMIN_PASS) {
+  console.error('❌ ПЕРЕМЕННЫЕ ADMIN_USER и ADMIN_PASS не заданы в .env — защита админки отключена');
+} else {
+  app.use(
+    ['/admin-prices.html', '/api/manual-prices'],
+    basicAuth({
+      users: { [ADMIN_USER]: ADMIN_PASS },
+      challenge: true,
+      realm: 'Admin Area'
+    })
+  );
+}
+
 
 
 // Проверка Content-Type
