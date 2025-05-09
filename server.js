@@ -1,4 +1,6 @@
 // server.js
+require('dotenv').config();                 //  ← в самом верху
+const basicAuth = require('express-basic-auth');
 const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
@@ -48,9 +50,23 @@ app.use(morgan("dev"));
 app.use(compression());
 app.use(cors({
   origin: "*",
-  methods: ["POST", "OPTIONS"],
+  methods: ["GET","POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
+// Защита Админ Панели
+
+const ADMIN_USER = process.env.ADMIN_USER;
+const ADMIN_PASS = process.env.ADMIN_PASS;
+app.use(
+  ['/admin-prices.html', '/api/manual-prices'],
+  basicAuth({
+    users: { [ADMIN_USER]: ADMIN_PASS },
+    challenge: true,
+    realm: 'Admin Area'
+  })
+);
+
 
 // Проверка Content-Type
 app.use((req, res, next) => {
