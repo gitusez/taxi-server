@@ -11,6 +11,22 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.yandex.ru",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS
+  }
+});
+
+// Бросит в консоль: либо OK, либо конкретную ошибку аутентификации
+transporter.verify()
+  .then(() => console.log("SMTP: авторизация прошла успешно"))
+  .catch(err => console.error("SMTP: ошибка авторизации:", err));
+
 const manualPricesPath = '/var/www/taxi-data/manual-prices.json';
 let manualPrices = {};
 
@@ -153,45 +169,73 @@ app.get('/logout', (req, res) => {
 });
 
 // 📩 Отправка заявки на Яндекс.Почту
+// app.post("/api/send-request", async (req, res) => {
+//   const { name, phone, request } = req.body;
+
+//   if (!name || !phone) {
+//     return res.status(400).json({ success: false, message: "Имя и телефон обязательны" });
+//   }
+
+//   const transporter = nodemailer.createTransport({
+//     host: "smtp.yandex.ru",
+//     port: 465,
+//     secure: true,
+//     auth: {
+//       user: process.env.MAIL_USER,
+//       pass: process.env.MAIL_PASS
+//     }
+//   });
+
+//   const mailOptions = {
+//     from: "Premier-Group-order@yandex.ru",
+//     to: "Premier-Group-order@yandex.ru", // или другую почту
+//     subject: "Заявка с сайта",
+//     html: `
+//       <h2>Новая заявка</h2>
+//       <p><strong>Имя:</strong> ${name}</p>
+//       <p><strong>Телефон:</strong> ${phone}</p>
+//       <p><strong>Желаемая машина:</strong> ${request || 'не указано'}</p>
+//     `
+//   };
+
+//   try {
+//     await transporter.sendMail(mailOptions);
+//     res.json({ success: true });
+//   } catch (error) {
+//     console.error("Ошибка отправки:", error);
+//     res.status(500).json({ success: false, message: "Ошибка отправки письма" });
+//   }
+// });
+
+// 🚘 Основной эндпоинт
+
+
 app.post("/api/send-request", async (req, res) => {
   const { name, phone, request } = req.body;
-
   if (!name || !phone) {
     return res.status(400).json({ success: false, message: "Имя и телефон обязательны" });
   }
 
-  const transporter = nodemailer.createTransport({
-    host: "smtp.yandex.ru",
-    port: 465,
-    secure: true,
-    auth: {
-      user: "Premier-Group-order@yandex.ru",
-      pass: "9ad-8Ce-9Fv-ECc"
-    }
-  });
-
-  const mailOptions = {
-    from: "Premier-Group-order@yandex.ru",
-    to: "Premier-Group-order@yandex.ru", // или другую почту
-    subject: "Заявка с сайта",
-    html: `
-      <h2>Новая заявка</h2>
-      <p><strong>Имя:</strong> ${name}</p>
-      <p><strong>Телефон:</strong> ${phone}</p>
-      <p><strong>Желаемая машина:</strong> ${request || 'не указано'}</p>
-    `
-  };
-
   try {
-    await transporter.sendMail(mailOptions);
+    await transporter.sendMail({
+      from: process.env.MAIL_USER,
+      to:   process.env.MAIL_USER,
+      subject: "Заявка с сайта",
+      html: `
+        <h2>Новая заявка</h2>
+        <p><strong>Имя:</strong> ${name}</p>
+        <p><strong>Телефон:</strong> ${phone}</p>
+        <p><strong>Желаемая машина:</strong> ${request || 'не указано'}</p>
+      `
+    });
     res.json({ success: true });
   } catch (error) {
-    console.error("Ошибка отправки:", error);
-    res.status(500).json({ success: false, message: "Ошибка отправки письма" });
+    console.error("Ошибка отправки письма:", error);
+    res.status(500).json({ success: false, message: error.message || "Ошибка отправки письма" });
   }
 });
 
-// 🚘 Основной эндпоинт
+
 
 app.post("/api/cars/combined", async (req, res) => {
   try {
