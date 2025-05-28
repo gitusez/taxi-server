@@ -65,7 +65,12 @@ let carCache = {
 app.use(morgan("dev"));
 app.use(compression());
 app.use(cors({
-  origin: "https://autofinanceapp.ru/",
+  // origin: "https://autofinanceapp.ru/",
+    origin: [
+    "https://autofinanceapp.ru",     // ваш продакшн-домен
+    "http://127.0.0.1:5500",          // Live Server по IP
+    "http://localhost:5500"           // Live Server по localhost
+  ],
   methods: ["GET","POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
