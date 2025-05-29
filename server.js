@@ -69,7 +69,8 @@ app.use(cors({
     origin: [
     "https://autofinanceapp.ru",     // ваш продакшн-домен
     "http://127.0.0.1:5500",          // Live Server по IP
-    "http://localhost:5500"           // Live Server по localhost
+    "http://localhost:5500",          // Live Server по localhost
+    "http://localhost:3000"         
   ],
   methods: ["GET","POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
@@ -401,6 +402,9 @@ app.get("/", (req, res) => {
 
 // const fs = require('fs');
 const PHOTO_DIR = "/var/www/autofinanceapp.ru/photos";
+// 📷 Раздаём статические файлы из каталога /var/www/autofinanceapp.ru/photos
+app.use('/photos', express.static(PHOTO_DIR));
+
 
 // 📷 Эндпоинт: отдать список фото по номеру
 app.get('/api/photos/:number', (req, res) => {
