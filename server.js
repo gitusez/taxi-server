@@ -364,6 +364,13 @@ app.post("/api/cars/combined", async (req, res) => {
         fuel_type: car.fuel_type,
         transmission: car.transmission,
         equipment: car.equipment,
+
+        // теперь берём комплектацию из manual, если она задана,
+        // иначе — из car.equipment (старого поля)
+        equipment:      manual.equipment ?? car.equipment,
+
+        // а тут новое поле — описание
+        description:    manual.description ?? car.description,
     
         // 👉 Добавляем
         manual_price: manual // { rent, buyout, prokat } или {}
