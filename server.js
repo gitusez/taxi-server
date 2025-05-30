@@ -363,17 +363,14 @@ app.post("/api/cars/combined", async (req, res) => {
         odometer_display: odo ? `${odo.toLocaleString("ru-RU")} км` : "—",
         fuel_type: car.fuel_type,
         transmission: car.transmission,
-        equipment: car.equipment,
+    // Комплектация: берём из manual, иначе из car.equipment
+    equipment:        manual.equipment ?? car.equipment,
 
-        // теперь берём комплектацию из manual, если она задана,
-        // иначе — из car.equipment (старого поля)
-        equipment:      manual.equipment ?? car.equipment,
+    // Описание: из manual либо пустая строка (если car.description не используется)
+    description:      manual.description ?? "",
 
-        // а тут новое поле — описание
-        description:    manual.description ?? car.description,
-    
-        // 👉 Добавляем
-        manual_price: manual // { rent, buyout, prokat } или {}
+    // Вся структура ручных цен + новые поля
+    manual_price:     manual
       };
     });
     
