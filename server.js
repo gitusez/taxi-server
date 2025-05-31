@@ -3,6 +3,7 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const basicAuth = require('express-basic-auth');
 const express = require("express");
+const app = express();
 const cors = require("cors");
 const axios = require("axios");
 const morgan = require("morgan");
@@ -89,7 +90,7 @@ fs.watchFile(manualPricesPath, { interval: 1000 }, () => {
 });
 
 
-const app = express();
+// const app = express();
 
 // 🔁 Кэш в памяти на 10 секунд
 let carCache = {
