@@ -86,6 +86,30 @@ app.post('/api/photos/upload', upload.array('photos', 10), (req, res) => {
 });
 
 
+// Получить список фото по номеру
+app.get('/api/photos/:number', (req, res) => {
+  const number = req.params.number.toUpperCase();
+  const photoDir = path.join('/var/www/autofinanceapp.ru/photos', number);
+  fs.readdir(photoDir, (err, files) => {
+    if (err) return res.json([]);
+    const images = files.filter(f => /\.(jpe?g|png)$/i.test(f));
+    res.json(images);
+  });
+});
+
+// Удалить конкретное фото
+app.delete('/api/photos/:number/:filename', (req, res) => {
+  const number = req.params.number.toUpperCase();
+  const filename = req.params.filename;
+  const filePath = path.join('/var/www/autofinanceapp.ru/photos', number, filename);
+  fs.unlink(filePath, err => {
+    if (err) return res.status(500).json({ success: false });
+    res.json({ success: true });
+  });
+});
+
+
+
 const transporter = nodemailer.createTransport({
   host: "smtp.yandex.ru",
   port: 465,
