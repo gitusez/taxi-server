@@ -14,54 +14,136 @@ const fs = require("fs");
 const multer = require('multer');
 
 
+// app.use(express.json({ limit: '50mb' }));
+// app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+
+
+
+// const upload = multer({
+//   storage: multer.diskStorage({
+//     destination: function (req, file, cb) {
+//       const number = (req.body.number || '')
+//         .toUpperCase()
+//         .replace(/\s/g, '')
+//         .replace(/А/g, 'A')
+//         .replace(/В/g, 'B')
+//         .replace(/Е/g, 'E')
+//         .replace(/К/g, 'K')
+//         .replace(/М/g, 'M')
+//         .replace(/Н/g, 'H')
+//         .replace(/О/g, 'O')
+//         .replace(/Р/g, 'P')
+//         .replace(/С/g, 'C')
+//         .replace(/Т/g, 'T')
+//         .replace(/У/g, 'Y')
+//         .replace(/Х/g, 'X');
+
+//       const dir = path.join('/var/www/autofinanceapp.ru/photos', number);
+//       fs.mkdirSync(dir, { recursive: true });
+//       cb(null, dir);
+//     },
+
+//     filename: function (req, file, cb) {
+//       const number = (req.body.number || '')
+//         .toUpperCase()
+//         .replace(/\s/g, '')
+//         .replace(/А/g, 'A')
+//         .replace(/В/g, 'B')
+//         .replace(/Е/g, 'E')
+//         .replace(/К/g, 'K')
+//         .replace(/М/g, 'M')
+//         .replace(/Н/g, 'H')
+//         .replace(/О/g, 'O')
+//         .replace(/Р/g, 'P')
+//         .replace(/С/g, 'C')
+//         .replace(/Т/g, 'T')
+//         .replace(/У/g, 'Y')
+//         .replace(/Х/g, 'X');
+
+//       const ext = path.extname(file.originalname).toLowerCase();
+//       const dir = path.join('/var/www/autofinanceapp.ru/photos', number);
+
+//       fs.readdir(dir, (err, files) => {
+//         const count = Array.isArray(files)
+//           ? files.filter(f => f.startsWith(number)).length + 1
+//           : 1;
+//         const filename = `${number}_${count}${ext}`;
+//         cb(null, filename);
+//       });
+//     }
+//   }),
+
+//   fileFilter: function (req, file, cb) {
+//     const allowed = ['.jpeg', '.jpg', '.png'];
+//     const ext = path.extname(file.originalname).toLowerCase();
+//     cb(null, allowed.includes(ext));
+//   }
+// });
+
+
+// // 📤 Загрузка фото
+// app.post('/api/photos/upload', upload.array('photos', 10), (req, res) => {
+//   res.json({ success: true });
+// });
+
+
+// // Получить список фото по номеру
+// app.get('/api/photos/:number', (req, res) => {
+//   const number = req.params.number.toUpperCase();
+//   const photoDir = path.join('/var/www/autofinanceapp.ru/photos', number);
+//   fs.readdir(photoDir, (err, files) => {
+//     if (err) return res.json([]);
+//     const images = files.filter(f => /\.(jpe?g|png)$/i.test(f));
+//     res.json(images);
+//   });
+// });
+
+// // Удалить конкретное фото
+// app.delete('/api/photos/:number/:filename', (req, res) => {
+//   const number = req.params.number.toUpperCase();
+//   const filename = req.params.filename;
+//   const filePath = path.join('/var/www/autofinanceapp.ru/photos', number, filename);
+//   fs.unlink(filePath, err => {
+//     if (err) return res.status(500).json({ success: false });
+//     res.json({ success: true });
+//   });
+// });
+
+// 📌 Унификация госномеров
+function normalizeNumber(str) {
+  return (str || "")
+    .toUpperCase()
+    .replace(/\s/g, '')
+    .replace(/А/g, 'A')
+    .replace(/В/g, 'B')
+    .replace(/Е/g, 'E')
+    .replace(/К/g, 'K')
+    .replace(/М/g, 'M')
+    .replace(/Н/g, 'H')
+    .replace(/О/g, 'O')
+    .replace(/Р/g, 'P')
+    .replace(/С/g, 'C')
+    .replace(/Т/g, 'T')
+    .replace(/У/g, 'Y')
+    .replace(/Х/g, 'X');
+}
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
 
 const upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
-      const number = (req.body.number || '')
-        .toUpperCase()
-        .replace(/\s/g, '')
-        .replace(/А/g, 'A')
-        .replace(/В/g, 'B')
-        .replace(/Е/g, 'E')
-        .replace(/К/g, 'K')
-        .replace(/М/g, 'M')
-        .replace(/Н/g, 'H')
-        .replace(/О/g, 'O')
-        .replace(/Р/g, 'P')
-        .replace(/С/g, 'C')
-        .replace(/Т/g, 'T')
-        .replace(/У/g, 'Y')
-        .replace(/Х/g, 'X');
-
+      const number = normalizeNumber(req.body.number);
       const dir = path.join('/var/www/autofinanceapp.ru/photos', number);
       fs.mkdirSync(dir, { recursive: true });
       cb(null, dir);
     },
-
     filename: function (req, file, cb) {
-      const number = (req.body.number || '')
-        .toUpperCase()
-        .replace(/\s/g, '')
-        .replace(/А/g, 'A')
-        .replace(/В/g, 'B')
-        .replace(/Е/g, 'E')
-        .replace(/К/g, 'K')
-        .replace(/М/g, 'M')
-        .replace(/Н/g, 'H')
-        .replace(/О/g, 'O')
-        .replace(/Р/g, 'P')
-        .replace(/С/g, 'C')
-        .replace(/Т/g, 'T')
-        .replace(/У/g, 'Y')
-        .replace(/Х/g, 'X');
-
+      const number = normalizeNumber(req.body.number);
       const ext = path.extname(file.originalname).toLowerCase();
       const dir = path.join('/var/www/autofinanceapp.ru/photos', number);
-
       fs.readdir(dir, (err, files) => {
         const count = Array.isArray(files)
           ? files.filter(f => f.startsWith(number)).length + 1
@@ -71,7 +153,6 @@ const upload = multer({
       });
     }
   }),
-
   fileFilter: function (req, file, cb) {
     const allowed = ['.jpeg', '.jpg', '.png'];
     const ext = path.extname(file.originalname).toLowerCase();
@@ -79,16 +160,14 @@ const upload = multer({
   }
 });
 
-
 // 📤 Загрузка фото
 app.post('/api/photos/upload', upload.array('photos', 10), (req, res) => {
   res.json({ success: true });
 });
 
-
-// Получить список фото по номеру
+// 📥 Получение списка фото по номеру
 app.get('/api/photos/:number', (req, res) => {
-  const number = req.params.number.toUpperCase();
+  const number = normalizeNumber(req.params.number);
   const photoDir = path.join('/var/www/autofinanceapp.ru/photos', number);
   fs.readdir(photoDir, (err, files) => {
     if (err) return res.json([]);
@@ -97,9 +176,9 @@ app.get('/api/photos/:number', (req, res) => {
   });
 });
 
-// Удалить конкретное фото
+// ❌ Удаление фото
 app.delete('/api/photos/:number/:filename', (req, res) => {
-  const number = req.params.number.toUpperCase();
+  const number = normalizeNumber(req.params.number);
   const filename = req.params.filename;
   const filePath = path.join('/var/www/autofinanceapp.ru/photos', number, filename);
   fs.unlink(filePath, err => {
@@ -107,7 +186,6 @@ app.delete('/api/photos/:number/:filename', (req, res) => {
     res.json({ success: true });
   });
 });
-
 
 
 const transporter = nodemailer.createTransport({
