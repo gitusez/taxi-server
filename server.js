@@ -111,6 +111,11 @@ const upload = multer({
 });
 
 
+// 📤 Загрузка фото
+app.post('/api/photos/upload', upload.array('photos', 10), (req, res) => {
+  res.json({ success: true });
+});
+
 
 const transporter = nodemailer.createTransport({
   host: "smtp.yandex.ru",
