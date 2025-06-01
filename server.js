@@ -14,6 +14,21 @@ const fs = require("fs");
 const multer = require('multer');
 
 
+// 🔧 Middleware
+app.use(morgan("dev"));
+app.use(compression());
+app.use(cors({
+  // origin: "https://autofinanceapp.ru/",
+    origin: [
+    "https://autofinanceapp.ru",     // ваш продакшн-домен
+    "http://127.0.0.1:5500",          // Live Server по IP
+    "http://localhost:5500",          // Live Server по localhost
+    "http://localhost:3000"         
+  ],
+  methods: ["GET","POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 // app.use(express.json({ limit: '50mb' }));
 // app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -237,20 +252,20 @@ let carCache = {
   duration: 10 * 1000 // 10 секунд
 };
 
-// 🔧 Middleware
-app.use(morgan("dev"));
-app.use(compression());
-app.use(cors({
-  // origin: "https://autofinanceapp.ru/",
-    origin: [
-    "https://autofinanceapp.ru",     // ваш продакшн-домен
-    "http://127.0.0.1:5500",          // Live Server по IP
-    "http://localhost:5500",          // Live Server по localhost
-    "http://localhost:3000"         
-  ],
-  methods: ["GET","POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+// // 🔧 Middleware
+// app.use(morgan("dev"));
+// app.use(compression());
+// app.use(cors({
+//   // origin: "https://autofinanceapp.ru/",
+//     origin: [
+//     "https://autofinanceapp.ru",     // ваш продакшн-домен
+//     "http://127.0.0.1:5500",          // Live Server по IP
+//     "http://localhost:5500",          // Live Server по localhost
+//     "http://localhost:3000"         
+//   ],
+//   methods: ["GET","POST", "OPTIONS"],
+//   allowedHeaders: ["Content-Type", "Authorization"]
+// }));
 
 // Защита Админ Панели
 
