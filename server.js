@@ -20,7 +20,8 @@ app.use(compression());
 app.use(cors({
   // origin: "https://autofinanceapp.ru/",
     origin: [
-    "https://autofinanceapp.ru",     // ваш продакшн-домен
+    "https://autofinanceapp.ru",
+    "https://autofinance.pro",     // ваш продакшн-домен
     "http://127.0.0.1:5500",
     "http://127.0.0.1:5501",         // Live Server по IP
     "http://localhost:5500",          // Live Server по localhost
